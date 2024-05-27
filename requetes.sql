@@ -100,3 +100,11 @@ FROM casque
 INNER JOIN type_casque ON type_casque.id_type_casque = casque.id_type_casque
 GROUP BY type_casque.nom_type_casque
 ORDER BY qteCasque DESC
+
+-- 12. Nom des potions dont un des ingrédients est le poisson frais.
+
+SELECT potion.nom_potion
+FROM composer
+INNER JOIN potion ON potion.id_potion = composer.id_potion
+INNER JOIN ingredient ON ingredient.id_ingredient = composer.id_ingredient
+WHERE ingredient.nom_ingredient = 'Poisson frais'
