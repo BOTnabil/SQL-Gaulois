@@ -124,3 +124,13 @@ HAVING COUNT(personnage.id_lieu) = (SELECT MAX(nbHabitants)
                             			GROUP BY lieu.nom_lieu)
                             			AS Alias
 												 )
+
+-- 14. Nom des personnages qui n'ont jamais bu aucune potion.
+
+SELECT nom_personnage
+FROM personnage
+WHERE id_personnage NOT IN (
+    SELECT id_personnage
+    FROM boire
+    WHERE dose_boire > 0
+)
