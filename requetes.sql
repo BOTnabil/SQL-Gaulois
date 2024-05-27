@@ -53,3 +53,18 @@ FROM composer
 INNER JOIN ingredient  ON ingredient.id_ingredient = composer.id_ingredient
 INNER JOIN potion ON composer.id_potion = potion.id_potion
 WHERE potion.id_potion = '3'
+
+-- 8. Nom du ou des personnages qui ont pris le plus de casques dans la bataille 'Bataille du village 
+-- gaulois'.
+
+SELECT personnage.nom_personnage, MAX(qte) AS maxCasques
+FROM prendre_casque 
+INNER JOIN personnage ON personnage.id_personnage = prendre_casque.id_personnage
+INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
+WHERE bataille.id_bataille = '1' 
+AND qte = (	SELECT MAX(qte)
+         	FROM prendre_casque
+            INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
+            WHERE bataille.id_bataille = '1' 
+         	)
+GROUP BY personnage.nom_personnage 
