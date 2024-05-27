@@ -77,3 +77,17 @@ FROM boire
 INNER JOIN personnage ON personnage.id_personnage = boire.id_personnage
 GROUP BY personnage.nom_personnage, boire.dose_boire
 ORDER BY boire.dose_boire DESC
+
+-- 10. Nom de la bataille où le nombre de casques pris a été le plus important.
+
+SELECT bataille.nom_bataille, SUM(prendre_casque.qte) AS totalCasques
+FROM prendre_casque
+INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
+GROUP BY bataille.nom_bataille
+HAVING totalCasques = (SELECT MAX(qteTotale)
+                		FROM (SELECT SUM(qte) AS qteTotale
+                    	FROM prendre_casque
+                    	INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
+                    	GROUP BY bataille.nom_bataille)
+                    	AS alias
+						)
