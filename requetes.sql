@@ -91,3 +91,12 @@ HAVING totalCasques = (SELECT MAX(qteTotale)
                     	GROUP BY bataille.nom_bataille)
                     	AS alias
 						)
+
+-- 11. Combien existe-t-il de casques de chaque type et quel est leur coût total ? (classés par 
+-- nombre décroissant)
+
+SELECT type_casque.nom_type_casque, SUM(casque.cout_casque) AS totalPrix, COUNT(casque.nom_casque) AS qteCasque
+FROM casque
+INNER JOIN type_casque ON type_casque.id_type_casque = casque.id_type_casque
+GROUP BY type_casque.nom_type_casque
+ORDER BY qteCasque DESC
