@@ -85,10 +85,11 @@ FROM prendre_casque
 INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
 GROUP BY bataille.nom_bataille
 HAVING totalCasques = (SELECT MAX(qteTotale)
-                		FROM (SELECT SUM(qte) AS qteTotale
-                    	FROM prendre_casque
-                    	INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
-                    	GROUP BY bataille.nom_bataille)
+                		FROM (  SELECT SUM(qte) AS qteTotale
+                    	        FROM prendre_casque
+                    	        INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
+                    	        GROUP BY bataille.nom_bataille
+                                )
                     	AS alias
 						)
 
