@@ -20,3 +20,11 @@ SELECT nom_personnage, id_specialite, adresse_personnage, id_lieu
 FROM personnage
 ORDER BY id_lieu, nom_personnage
 
+-- 4. Nom des spécialités avec nombre de personnages par spécialité (trié par nombre de 
+-- personnages décroissant).
+
+SELECT nom_specialite, COUNT(personnage.id_personnage) AS nbrePersonnages
+FROM specialite
+INNER JOIN personnage ON specialite.id_specialite = personnage.id_specialite
+GROUP BY personnage.id_specialite
+ORDER BY nbrePersonnages DESC
