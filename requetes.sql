@@ -68,3 +68,12 @@ AND qte = (	SELECT MAX(qte)
             WHERE bataille.id_bataille = '1' 
          	)
 GROUP BY personnage.nom_personnage 
+
+-- 9. Nom des personnages et leur quantité de potion bue (en les classant du plus grand buveur 
+-- au plus petit).
+
+SELECT personnage.nom_personnage, dose_boire
+FROM boire
+INNER JOIN personnage ON personnage.id_personnage = boire.id_personnage
+GROUP BY personnage.nom_personnage, boire.dose_boire
+ORDER BY boire.dose_boire DESC
