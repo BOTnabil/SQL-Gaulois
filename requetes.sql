@@ -45,3 +45,4 @@ INNER JOIN ingredient ON ingredient.id_ingredient = composer.id_ingredient
 INNER JOIN potion ON composer.id_potion = potion.id_potion
 GROUP BY potion.nom_potion
 ORDER BY coutDeReal DESC
+
