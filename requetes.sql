@@ -109,3 +109,18 @@ FROM composer
 INNER JOIN potion ON potion.id_potion = composer.id_potion
 INNER JOIN ingredient ON ingredient.id_ingredient = composer.id_ingredient
 WHERE ingredient.nom_ingredient = 'Poisson frais'
+
+-- 13. Nom du / des lieu(x) possédant le plus d'habitants, en dehors du village gaulois.
+
+SELECT lieu.nom_lieu, COUNT(personnage.id_lieu) AS nbreHabitants
+FROM personnage
+INNER JOIN lieu ON lieu.id_lieu = personnage.id_lieu
+GROUP BY lieu.nom_lieu
+HAVING COUNT(personnage.id_lieu) = (SELECT MAX(nbHabitants)
+                        				FROM ( SELECT COUNT(personnage.id_lieu) AS nbHabitants
+                            			FROM personnage
+                            			INNER JOIN lieu ON lieu.id_lieu = personnage.id_lieu
+                            			WHERE NOT lieu.nom_lieu = 'Village gaulois'
+                            			GROUP BY lieu.nom_lieu)
+                            			AS Alias
+												 )
