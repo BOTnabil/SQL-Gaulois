@@ -46,3 +46,10 @@ INNER JOIN potion ON composer.id_potion = potion.id_potion
 GROUP BY potion.nom_potion
 ORDER BY coutDeReal DESC
 
+-- 7. Nom des ingrédients + coût + quantité de chaque ingrédient qui composent la potion 'Santé'.
+
+SELECT qte, ingredient.nom_ingredient, ingredient.cout_ingredient
+FROM composer 
+INNER JOIN ingredient  ON ingredient.id_ingredient = composer.id_ingredient
+INNER JOIN potion ON composer.id_potion = potion.id_potion
+WHERE potion.id_potion = '3'
