@@ -16,9 +16,11 @@ ORDER BY nbrePersonnages DESC
 -- 3. Nom des personnages + spécialité + adresse et lieu d'habitation, triés par lieu puis par nom 
 -- de personnage.
 
-SELECT nom_personnage, id_specialite, adresse_personnage, id_lieu
-FROM personnage
-ORDER BY id_lieu, nom_personnage
+SELECT personnage.nom_personnage, nom_specialite, personnage.adresse_personnage, lieu.nom_lieu
+FROM specialite
+INNER JOIN personnage ON specialite.id_specialite = personnage.id_specialite
+INNER JOIN lieu ON personnage.id_lieu = lieu.id_lieu
+ORDER BY nom_lieu, nom_personnage
 
 -- 4. Nom des spécialités avec nombre de personnages par spécialité (trié par nombre de 
 -- personnages décroissant).
@@ -57,7 +59,7 @@ WHERE potion.id_potion = '3'
 -- 8. Nom du ou des personnages qui ont pris le plus de casques dans la bataille 'Bataille du village 
 -- gaulois'.
 
-SELECT personnage.nom_personnage, MAX(qte) AS maxCasques
+SELECT personnage.nom_personnage, SUM(qte) AS maxCasques
 FROM prendre_casque 
 INNER JOIN personnage ON personnage.id_personnage = prendre_casque.id_personnage
 INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
@@ -72,26 +74,24 @@ GROUP BY personnage.nom_personnage
 -- 9. Nom des personnages et leur quantité de potion bue (en les classant du plus grand buveur 
 -- au plus petit).
 
-SELECT personnage.nom_personnage, dose_boire
+SELECT personnage.id_personnage, SUM(dose_boire) AS qtePotionBue
 FROM boire
 INNER JOIN personnage ON personnage.id_personnage = boire.id_personnage
-GROUP BY personnage.nom_personnage, boire.dose_boire
-ORDER BY boire.dose_boire DESC
+GROUP BY personnage.id_personnage
+ORDER BY qtePotionBue DESC
 
 -- 10. Nom de la bataille où le nombre de casques pris a été le plus important.
 
-SELECT bataille.nom_bataille, SUM(prendre_casque.qte) AS totalCasques
-FROM prendre_casque
-INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
-GROUP BY bataille.nom_bataille
-HAVING totalCasques = (SELECT MAX(qteTotale)
-                		FROM (  SELECT SUM(qte) AS qteTotale
-                    	        FROM prendre_casque
-                    	        INNER JOIN bataille ON bataille.id_bataille = prendre_casque.id_bataille
-                    	        GROUP BY bataille.nom_bataille
-                                )
-                    	AS alias
-						)
+SELECT bataille.nom_bataille
+FROM bataille
+INNER JOIN prendre_casque 
+ON bataille.id_bataille = prendre_casque.id_bataille
+GROUP BY bataille.id_bataille
+HAVING SUM(prendre_casque.qte) >= ALL (
+					SELECT SUM(prendre_casque.qte) AS nombre_casque_pris
+					FROM bataille
+					INNER JOIN prendre_casque ON bataille.id_bataille = prendre_casque.id_bataille
+					GROUP BY prendre_casque.id_bataille);
 
 -- 11. Combien existe-t-il de casques de chaque type et quel est leur coût total ? (classés par 
 -- nombre décroissant)
@@ -112,18 +112,18 @@ WHERE ingredient.nom_ingredient = 'Poisson frais'
 
 -- 13. Nom du / des lieu(x) possédant le plus d'habitants, en dehors du village gaulois.
 
-SELECT lieu.nom_lieu, COUNT(personnage.id_lieu) AS nbreHabitants
-FROM personnage
-INNER JOIN lieu ON lieu.id_lieu = personnage.id_lieu
-GROUP BY lieu.nom_lieu
-HAVING COUNT(personnage.id_lieu) = (SELECT MAX(nbHabitants)
-                        				FROM ( SELECT COUNT(personnage.id_lieu) AS nbHabitants
-                            			FROM personnage
-                            			INNER JOIN lieu ON lieu.id_lieu = personnage.id_lieu
-                            			WHERE NOT lieu.nom_lieu = 'Village gaulois'
-                            			GROUP BY lieu.nom_lieu)
-                            			AS Alias
-												 )
+SELECT lieu.nom_lieu
+FROM lieu
+INNER JOIN personnage 
+ON lieu.id_lieu = personnage.id_lieu
+WHERE lieu.nom_lieu != 'Village gaulois'
+GROUP BY personnage.id_lieu
+HAVING COUNT(personnage.id_lieu)>= ALL (
+				SELECT COUNT(personnage.id_lieu) AS nombre_habitant
+				FROM lieu
+				INNER JOIN personnage ON lieu.id_lieu = personnage.id_lieu
+				WHERE lieu.nom_lieu <> 'Village gaulois'
+				GROUP BY personnage.id_lieu);
 
 -- 14. Nom des personnages qui n'ont jamais bu aucune potion.
 
@@ -145,3 +145,48 @@ WHERE id_personnage NOT IN (
     INNER JOIN potion ON potion.id_potion = autoriser_boire.id_potion
     WHERE potion.nom_potion = 'Magique'
 )
+
+-- A. Ajoutez le personnage suivant : Champdeblix, agriculteur résidant à la ferme Hantassion de Rotomagus.
+
+INSERT INTO personnage (nom_personnage,adresse_personnage, id_lieu, id_specialite)
+VALUES ('Champdeblix','Ferme', '6', '12')
+
+-- B. Autorisez Bonemine à boire de la potion magique, elle est jalouse d'Iélosubmarine...
+
+INSERT INTO autoriser_boire (id_potion, id_personnage)
+VALUES (1, 12);
+
+
+-- C. Supprimez les casques grecs qui n'ont jamais été pris lors d'une bataille.
+
+DELETE FROM casque
+WHERE id_type_casque = (
+		SELECT id_type_casque
+   	FROM type_casque
+   	WHERE nom_type_casque = 'Grec'
+				)
+AND id_casque NOT IN (
+		SELECT prendre_casque.id_casque
+		FROM prendre_casque)
+
+-- D. Modifiez l'adresse de Zérozérosix : il a été mis en prison à Condate.
+
+UPDATE personnage p
+SET id_lieu = (
+    SELECT l.id_lieu
+    FROM personnage p
+    INNER JOIN lieu l ON l.id_lieu = p.id_lieu
+    WHERE l.nom_lieu = 'Condate'
+)
+
+-- E. La potion 'Soupe' ne doit plus contenir de persil.
+
+DELETE FROM composer
+WHERE (id_potion = 9 
+AND id_ingredient = 19);
+
+-- F. Obélix s'est trompé : ce sont 42 casques Weisenau, et non Ostrogoths, qu'il a pris lors de la bataille 'Attaque de la banque postale'. Corrigez son erreur !
+
+UPDATE prendre_casque 
+SET id_casque= 10 , qte = 42
+WHERE id_bataille = 9;
